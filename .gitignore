@@ -61,4 +61,5 @@ typings/
 .next
 
 #upload
-upload/**/*
+upload/*.png
+upload/*.jpg
