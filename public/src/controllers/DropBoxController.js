@@ -8,9 +8,11 @@ class DropBoxController{
         this.progressBarEl = this.snackModalEl.querySelector(".mc-progress-bar-fg");
         this.fileNameEl = this.snackModalEl.querySelector(".filename");
         this.timeLeftFileEl = this.snackModalEl.querySelector(".timeleft");
+        this.listFileEl = document.getElementById("list-of-files-and-directories");
 
         this.connectFireBase();
         this.initEvents();
+        this.readFiles();
     }
 
     connectFireBase(){
@@ -304,13 +306,23 @@ class DropBoxController{
         }
     }
 
-    getFileView(file){
-        return `
-        <li>
+    getFileView(file, key){
+        let li = document.createElement("li");
+        li.dataset.key = key;
+        li.innerHTML = `
             ${this.getFileIconView(file)}
             <div class="name text-center">${file.name}</div>
-        </li>
         `;
+        return li;
+    }
+
+    readFiles(){
+        this.getFireBaseRef().on('value',snapshot=>{
+            this.listFileEl.innerHTML = '';
+            snapshot.forEach(snapshotItem=>{
+                this.listFileEl.appendChild(this.getFileView(snapshotItem.val(), snapshotItem.ke));
+            });
+        });
     }
     
 }
