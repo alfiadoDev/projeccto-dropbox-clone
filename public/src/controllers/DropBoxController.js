@@ -2,6 +2,9 @@ class DropBoxController{
 
     constructor(){
 
+        //personalizar evento para os botoes renomear e excluir
+        this.onselectionchange = new Event("onselectionchange");
+
         this.btnSendFileEl = document.getElementById("btn-send-file");
         this.inputFilesEl = document.getElementById("files");
         this.snackModalEl = document.getElementById("react-snackbar-root");
@@ -9,6 +12,9 @@ class DropBoxController{
         this.fileNameEl = this.snackModalEl.querySelector(".filename");
         this.timeLeftFileEl = this.snackModalEl.querySelector(".timeleft");
         this.listFileEl = document.getElementById("list-of-files-and-directories");
+        this.btnNewFolder = document.getElementById("btn-new-folder");
+        this.btnRename = document.getElementById("btn-rename");
+        this.btnDelete = document.getElementById("btn-delete");
 
         this.connectFireBase();
         this.initEvents();
@@ -30,7 +36,27 @@ class DropBoxController{
         firebase.initializeApp(firebaseConfig);
     }
 
+    getSelecions(){
+        return this.listFileEl.querySelectorAll("li.selected");
+    }
+
     initEvents(){
+
+        this.listFileEl.addEventListener("onselectionchange", e=>{
+            switch(this.getSelecions().length){
+                case 0:
+                    this.btnRename.style.display = 'none';
+                    this.btnDelete.style.display = 'none';
+                    break;
+                case 1:
+                    this.btnRename.style.display = 'block';
+                    this.btnDelete.style.display = 'block';
+                    break;
+                default:
+                    this.btnRename.style.display = 'none';
+                    this.btnDelete.style.display = 'block';
+            }
+        });
 
         this.btnSendFileEl.addEventListener("click", event=>{
 
@@ -337,6 +363,8 @@ class DropBoxController{
                     lis.forEach((el,i)=>{
                         if(i >= index[0] && i<= index[1]) el.classList.add("selected");
                     });
+                    //metodo para disparar um evento
+                    this.listFileEl.dispatchEvent(this.onselectionchange);
                     //para ele nao continuar a executar o codigo o toggle
                     return true;
                 }
@@ -347,6 +375,8 @@ class DropBoxController{
                 });
             }
             li.classList.toggle('selected');
+            //metodo para disparar um evento
+            this.listFileEl.dispatchEvent(this.onselectionchange);
         });
     }
 
