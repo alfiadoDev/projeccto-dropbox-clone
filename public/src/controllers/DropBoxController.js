@@ -2,6 +2,8 @@ class DropBoxController{
 
     constructor(){
 
+        this.currentFolder = ['hcode'];
+
         //personalizar evento para os botoes renomear e excluir
         this.onselectionchange = new Event("onselectionchange");
 
@@ -56,6 +58,17 @@ class DropBoxController{
     }
 
     initEvents(){
+        this.btnNewFolder.addEventListener('click', event=>{
+            let nameFolder = prompt("Digita o nome da nova pasta");
+            if(nameFolder){
+                this.getFireBaseRef().push().set({
+                    name: nameFolder,
+                    type: 'folder',
+                    path: this.currentFolder.join('/')
+                });
+            }
+        });
+
         this.btnDelete.addEventListener('click', event=>{
             this.removeTask().then(responses=>{
                 responses.forEach(response=>{
