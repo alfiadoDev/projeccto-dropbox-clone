@@ -63,3 +63,10 @@ typings/
 #upload
 upload/*.png
 upload/*.jpg
+upload/*.mp3
+upload/*.mp4
+upload/*.pdf
+upload/*.doc
+upload/*.jpeg
+upload/*.gif
+
