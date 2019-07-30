@@ -7,6 +7,7 @@ class DropBoxController{
         //personalizar evento para os botoes renomear e excluir
         this.onselectionchange = new Event("onselectionchange");
 
+        this.navEl = document.getElementById('browse-location');
         this.btnSendFileEl = document.getElementById("btn-send-file");
         this.inputFilesEl = document.getElementById("files");
         this.snackModalEl = document.getElementById("react-snackbar-root");
@@ -20,7 +21,7 @@ class DropBoxController{
 
         this.connectFireBase();
         this.initEvents();
-        this.readFiles();
+        this.openFolder();
     }
 
     connectFireBase(){
@@ -135,8 +136,9 @@ class DropBoxController{
         this.btnSendFileEl.disabled =  false;
     }
 
-    getFireBaseRef(){
-        return firebase.database().ref('file');
+    getFireBaseRef(path){
+        if(!path) path = this.currentFolder.join('/');
+        return firebase.database().ref(path);
     }
 
     modalShowOrHideProgress(show = true){
@@ -401,7 +403,59 @@ class DropBoxController{
         return li;
     }
 
+    openFolder(){
+        if(this.lastFolder) this.getFireBaseRef(this.lastFolder).off('value');
+        this.readFiles();
+        this.renderNav();
+    }
+
+    renderNav(){
+        let nav = document.createElement('nav');
+        let path = [];
+
+        for(let i=0; i<this.currentFolder.length; i++){
+            let folderName = this.currentFolder[i];
+            let span = document.createElement('span');
+            path.push(folderName);
+            if((i+1) === this.currentFolder.length){
+                span.innerHTML = folderName;
+            }else{
+                span.className = "breadcrumb-segment__wrapper";
+                span.innerHTML = `
+                <span class="ue-effect-container uee-BreadCrumbSegment-link-0">
+                    <a href="#" data-path=${path.join('/')} class="breadcrumb-segment">${folderName}</a>
+                </span>
+                <svg width="24" height="24" viewBox="0 0 24 24" class="mc-icon-template-stateless" style="top: 4px; position: relative;">
+                    <title>arrow-right</title>
+                    <path d="M10.414 7.05l4.95 4.95-4.95 4.95L9 15.534 12.536 12 9 8.464z" fill="#637282" fill-rule="evenodd"></path>
+                </svg>
+                `;
+            }
+            nav.appendChild(span);
+        }
+        this.navEl.innerHTML = nav.innerHTML;
+        this.navEl.querySelectorAll('a').forEach(a=>{
+            a.addEventListener('click', e=>{
+                e.preventDefault();
+                this.currentFolder = a.dataset.path.split('/');
+                this.openFolder();
+            });
+        });
+    }
+
     initEventsLi(li){
+        li.addEventListener('dblclick', e=>{
+            let file = JSON.parse(li.dataset.file);
+            switch(file.type){
+                case 'folder':
+                    this.currentFolder.push(file.name);
+                    this.openFolder();
+                    break;
+                default:
+                    window.open('/file?path='+ file.path);
+            }
+        });
+        
         li.addEventListener('click', e=>{
             if(e.shiftKey){
                 let firstLi = this.listFileEl.querySelector(".selected");
@@ -439,10 +493,13 @@ class DropBoxController{
     }
 
     readFiles(){
+        this.lastFolder = this.currentFolder.join('/');
         this.getFireBaseRef().on('value',snapshot=>{
             this.listFileEl.innerHTML = '';
             snapshot.forEach(snapshotItem=>{
-                this.listFileEl.appendChild(this.getFileView(snapshotItem.val(), snapshotItem.key));
+                if(snapshotItem.val().type){
+                    this.listFileEl.appendChild(this.getFileView(snapshotItem.val(), snapshotItem.key));
+                }
             });
         });
     }
